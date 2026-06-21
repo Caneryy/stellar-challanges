@@ -1,9 +1,10 @@
 import { useState, type FormEvent } from "react";
 import {
-  buildPaymentTx,
+  getSuccessMessage,
   getTransactionErrorMessage,
+  prepareSendPayment,
   submitPayment,
-  validateDestinationAccount,
+  type SendPaymentOperation,
   validatePaymentInput,
 } from "../lib/transactions";
 import { getExplorerTxUrl } from "../lib/stellar";
@@ -31,12 +32,16 @@ export function SendPaymentForm({
   const [txHash, setTxHash] = useState<string | null>(null);
   const [explorerUrl, setExplorerUrl] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [lastOperation, setLastOperation] = useState<SendPaymentOperation | null>(
+    null,
+  );
 
   const resetFeedback = () => {
     setStatus("idle");
     setMessage(null);
     setTxHash(null);
     setExplorerUrl(null);
+    setLastOperation(null);
   };
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
@@ -65,30 +70,26 @@ export function SendPaymentForm({
 
     try {
       setStatus("building");
-      setMessage("Checking destination account...");
-      const destinationError = await validateDestinationAccount(
+      setMessage("Preparing transaction...");
+      const prepared = await prepareSendPayment(
+        address,
         destination.trim(),
         amount.trim(),
       );
-      if (destinationError) {
-        setStatus("error");
-        setMessage(destinationError);
-        return;
-      }
 
-      setMessage("Building transaction...");
-      const xdr = await buildPaymentTx(address, destination.trim(), amount.trim());
+      setLastOperation(prepared.operation);
+      setMessage(prepared.summary);
 
       setStatus("signing");
-      setMessage("Please confirm the transaction in Freighter...");
-      const signedXdr = await sign(xdr);
+      setMessage(`${prepared.summary} Confirm in Freighter...`);
+      const signedXdr = await sign(prepared.xdr);
 
       setStatus("submitting");
       setMessage("Submitting transaction to testnet...");
       const result = await submitPayment(signedXdr);
 
       setStatus("success");
-      setMessage("Payment sent successfully.");
+      setMessage(getSuccessMessage(prepared.operation));
       setTxHash(result.hash);
       setExplorerUrl(getExplorerTxUrl(result.hash));
       setDestination("");
@@ -108,8 +109,8 @@ export function SendPaymentForm({
     <section className="rounded-2xl border border-white/10 bg-white/5 p-5 text-left shadow-xl shadow-black/20">
       <h2 className="text-lg font-semibold text-white">Send XLM</h2>
       <p className="mt-1 text-sm text-slate-300">
-        Send a native XLM payment on Stellar testnet. New accounts are created
-        automatically when you send at least 1 XLM.
+        Send Payment works for both existing accounts and new addresses. If the
+        destination does not exist yet, at least 1 XLM will create and fund it.
       </p>
 
       <form onSubmit={(event) => void handleSubmit(event)} className="mt-5 space-y-4">
@@ -146,6 +147,12 @@ export function SendPaymentForm({
           {isSubmitting ? "Processing..." : "Send Payment"}
         </button>
       </form>
+
+      {lastOperation && status !== "idle" && status !== "error" && message && (
+        <p className="mt-4 text-xs uppercase tracking-wide text-slate-400">
+          Operation: {lastOperation === "payment" ? "Payment" : "Create Account"}
+        </p>
+      )}
 
       <div className="mt-4">
         <TransactionFeedback

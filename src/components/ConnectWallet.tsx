@@ -8,6 +8,7 @@ interface ConnectWalletProps {
   freighterInstallUrl: string;
   onConnect: () => Promise<void>;
   onDisconnect: () => void;
+  variant?: "sidebar" | "compact";
 }
 
 export function ConnectWallet({
@@ -20,6 +21,7 @@ export function ConnectWallet({
   freighterInstallUrl,
   onConnect,
   onDisconnect,
+  variant = "sidebar",
 }: ConnectWalletProps) {
   const handleConnect = async () => {
     try {
@@ -29,25 +31,36 @@ export function ConnectWallet({
     }
   };
 
+  const shellClass =
+    variant === "sidebar"
+      ? "rounded-[1.75rem] border border-white/10 bg-[color:var(--color-panel-muted)] p-4"
+      : "rounded-2xl border-2 border-[color:var(--color-ink)] bg-white p-4 shadow-[4px_4px_0_0_#14110f]";
+
   if (isChecking) {
     return (
-      <div className="rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-slate-300">
-        Checking wallet...
+      <div className={shellClass}>
+        <div className="flex items-center gap-3 text-sm text-white/70">
+          <span className="inline-block h-2.5 w-2.5 rounded-full bg-[color:var(--color-accent)] animate-pulse-dot" />
+          Checking Freighter...
+        </div>
       </div>
     );
   }
 
   if (!isInstalled) {
     return (
-      <div className="rounded-xl border border-amber-400/30 bg-amber-400/10 px-4 py-3 text-left">
-        <p className="text-sm font-medium text-amber-100">Freighter not detected</p>
+      <div className={shellClass}>
+        <p className="text-sm font-semibold text-white">Freighter not found</p>
+        <p className="mt-2 text-sm text-white/60">
+          Install the browser extension to connect your Stellar wallet.
+        </p>
         <a
           href={freighterInstallUrl}
           target="_blank"
           rel="noreferrer"
-          className="mt-2 inline-block text-sm text-cyan-300 underline"
+          className="mt-4 inline-flex rounded-full bg-[color:var(--color-accent)] px-4 py-2 text-sm font-semibold text-[color:var(--color-ink)] transition hover:translate-y-[-1px]"
         >
-          Install Freighter extension
+          Get Freighter
         </a>
       </div>
     );
@@ -55,26 +68,34 @@ export function ConnectWallet({
 
   if (connected && address) {
     return (
-      <div className="flex flex-col items-stretch gap-3 sm:items-end">
-        <div className="rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-left">
-          <p className="text-xs uppercase tracking-wide text-slate-400">Connected</p>
-          <p className="mt-1 font-mono text-sm text-white">
-            {address.slice(0, 4)}...{address.slice(-4)}
-          </p>
-          <p className="mt-1 text-xs text-slate-400">{network ?? "Unknown network"}</p>
-          {!isTestnet && (
-            <p className="mt-2 text-xs text-amber-300">
-              Switch Freighter to Testnet before sending payments.
+      <div className={shellClass}>
+        <div className="flex items-start justify-between gap-3">
+          <div>
+            <div className="flex items-center gap-2">
+              <span className="inline-block h-2.5 w-2.5 rounded-full bg-emerald-400" />
+              <p className="text-xs font-semibold uppercase tracking-[0.24em] text-white/50">
+                Connected
+              </p>
+            </div>
+            <p className="mt-3 font-mono text-sm text-white sm:text-base">
+              {address.slice(0, 6)}...{address.slice(-6)}
             </p>
-          )}
+            <p className="mt-2 text-xs text-white/45">{network ?? "Unknown network"}</p>
+          </div>
+          <button
+            type="button"
+            onClick={onDisconnect}
+            className="rounded-full border border-white/15 px-3 py-1.5 text-xs font-medium text-white/80 transition hover:border-white/35 hover:text-white"
+          >
+            Leave
+          </button>
         </div>
-        <button
-          type="button"
-          onClick={onDisconnect}
-          className="rounded-xl border border-red-400/30 bg-red-500/10 px-4 py-2 text-sm font-medium text-red-100 transition hover:bg-red-500/20"
-        >
-          Disconnect
-        </button>
+
+        {!isTestnet && (
+          <p className="mt-4 rounded-2xl border border-amber-300/20 bg-amber-300/10 px-3 py-2 text-xs leading-relaxed text-amber-100">
+            Switch Freighter to Testnet before sending payments.
+          </p>
+        )}
       </div>
     );
   }
@@ -83,9 +104,14 @@ export function ConnectWallet({
     <button
       type="button"
       onClick={() => void handleConnect()}
-      className="rounded-xl bg-cyan-400 px-5 py-3 text-sm font-semibold text-slate-950 transition hover:bg-cyan-300"
+      className="w-full rounded-[1.75rem] bg-[color:var(--color-accent)] px-5 py-4 text-left transition-all duration-300 hover:translate-y-[-2px] hover:brightness-105 hover:shadow-[0_12px_30px_rgba(255,92,0,0.25)]"
     >
-      Connect Wallet
+      <span className="font-display text-lg font-bold text-[color:var(--color-ink)]">
+        Connect Freighter
+      </span>
+      <span className="mt-1 block text-sm text-[color:var(--color-ink)]/70">
+        Link your testnet wallet to begin
+      </span>
     </button>
   );
 }

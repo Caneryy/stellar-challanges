@@ -10,6 +10,20 @@ import {
 import { config } from "../lib/stellar";
 
 const FREIGHTER_INSTALL_URL = "https://www.freighter.app/";
+const DISCONNECT_STORAGE_KEY = "lumen-send:wallet-disconnected";
+
+function hasUserDisconnected(): boolean {
+  return localStorage.getItem(DISCONNECT_STORAGE_KEY) === "true";
+}
+
+function markUserDisconnected(disconnected: boolean): void {
+  if (disconnected) {
+    localStorage.setItem(DISCONNECT_STORAGE_KEY, "true");
+    return;
+  }
+
+  localStorage.removeItem(DISCONNECT_STORAGE_KEY);
+}
 
 export function useFreighter() {
   const [connected, setConnected] = useState(false);
@@ -19,7 +33,16 @@ export function useFreighter() {
   const [isInstalled, setIsInstalled] = useState(true);
   const [isChecking, setIsChecking] = useState(true);
 
-  const syncWalletState = useCallback(async () => {
+  const syncWalletState = useCallback(async (respectDisconnect = true) => {
+    if (respectDisconnect && hasUserDisconnected()) {
+      setIsInstalled(true);
+      setConnected(false);
+      setAddress(null);
+      setNetwork(null);
+      setIsTestnet(false);
+      return;
+    }
+
     const connection = await isConnected();
     if (connection.error || !connection.isConnected) {
       setIsInstalled(false);
@@ -83,10 +106,12 @@ export function useFreighter() {
       throw new Error(allowed.error?.message || "Freighter access was denied.");
     }
 
-    await syncWalletState();
+    markUserDisconnected(false);
+    await syncWalletState(false);
   }, [syncWalletState]);
 
   const disconnect = useCallback(() => {
+    markUserDisconnected(true);
     setConnected(false);
     setAddress(null);
     setNetwork(null);

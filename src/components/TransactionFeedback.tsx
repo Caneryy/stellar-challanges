@@ -25,33 +25,61 @@ export function TransactionFeedback({
 
   const isSuccess = status === "success";
   const isError = status === "error";
+  const isPending = !isSuccess && !isError;
 
   return (
     <div
-      className={`rounded-xl border px-4 py-3 text-left text-sm ${
+      key={`${status}-${message}`}
+      className={`animate-scale-in rounded-[1.75rem] border-2 px-5 py-4 shadow-[6px_6px_0_0_rgba(20,17,15,0.08)] ${
         isSuccess
-          ? "border-emerald-400/30 bg-emerald-400/10 text-emerald-100"
+          ? "border-[color:var(--color-success)] bg-[color:var(--color-success-soft)] text-[color:var(--color-success)]"
           : isError
-            ? "border-red-400/30 bg-red-400/10 text-red-100"
-            : "border-white/10 bg-white/5 text-slate-200"
+            ? "border-[color:var(--color-danger)] bg-[color:var(--color-danger-soft)] text-[color:var(--color-danger)]"
+            : "border-[color:var(--color-ink)] bg-white text-[color:var(--color-ink)]"
       }`}
     >
-      <p>{message}</p>
-      {txHash && (
-        <p className="mt-2 break-all font-mono text-xs text-slate-200">
-          Hash: {txHash}
-        </p>
-      )}
-      {explorerUrl && (
-        <a
-          href={explorerUrl}
-          target="_blank"
-          rel="noreferrer"
-          className="mt-3 inline-block text-cyan-300 underline"
-        >
-          View on Stellar Expert
-        </a>
-      )}
+      <div className="flex items-start gap-3">
+        <span
+          className={`mt-1 inline-block h-3 w-3 rounded-full ${
+            isSuccess
+              ? "bg-[color:var(--color-success)]"
+              : isError
+                ? "bg-[color:var(--color-danger)]"
+                : "bg-[color:var(--color-accent)] animate-pulse-dot"
+          }`}
+        />
+        <div className="min-w-0 flex-1">
+          <p className="text-sm font-semibold leading-relaxed">{message}</p>
+
+          {txHash && (
+            <div className="mt-3 rounded-2xl border border-black/10 bg-white/70 px-3 py-2">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[color:var(--color-ink-muted)]">
+                Transaction hash
+              </p>
+              <p className="mt-1 break-all font-mono text-xs text-[color:var(--color-ink)]">
+                {txHash}
+              </p>
+            </div>
+          )}
+
+          {explorerUrl && (
+            <a
+              href={explorerUrl}
+              target="_blank"
+              rel="noreferrer"
+              className="mt-4 inline-flex items-center gap-2 text-sm font-semibold underline decoration-2 underline-offset-4"
+            >
+              Open in Stellar Expert
+            </a>
+          )}
+
+          {isPending && (
+            <p className="mt-2 text-xs text-[color:var(--color-ink-muted)]">
+              Keep Freighter open until the transaction completes.
+            </p>
+          )}
+        </div>
+      </div>
     </div>
   );
 }

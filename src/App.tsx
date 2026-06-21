@@ -1,11 +1,16 @@
 import { useState } from "react";
-import { BalanceCard } from "./components/BalanceCard";
-import { FundAccountButton } from "./components/FundAccountButton";
-import { Header } from "./components/Header";
+import { ActionTabs } from "./components/ActionTabs";
+import { EmptyWorkspace } from "./components/EmptyWorkspace";
+import { FundTabPanel } from "./components/FundTabPanel";
+import { LockedSendPanel } from "./components/LockedSendPanel";
 import { SendPaymentForm } from "./components/SendPaymentForm";
+import { WalletFlowSteps } from "./components/WalletFlowSteps";
+import { WalletOverview } from "./components/WalletOverview";
+import { WalletSidebar } from "./components/WalletSidebar";
 import { useBalance } from "./hooks/useBalance";
 import { useFreighter } from "./hooks/useFreighter";
 import { fundAccount } from "./lib/friendbot";
+import { canSendPayments, needsFriendbotFunding } from "./lib/walletFlow";
 
 function App() {
   const {
@@ -36,7 +41,7 @@ function App() {
 
     try {
       await fundAccount(address);
-      setFundMessage("Account funded successfully with Friendbot.");
+      setFundMessage("Friendbot added testnet XLM to your wallet. You can send now.");
       await refreshBalance();
     } catch (error) {
       setFundMessage(
@@ -48,58 +53,78 @@ function App() {
   };
 
   const walletReady = connected && Boolean(address);
+  const needsFunding = needsFriendbotFunding(balance);
+  const canSend = canSendPayments(balance) && !isBalanceLoading;
 
   return (
-    <div className="min-h-screen px-4 py-6 sm:px-6 sm:py-10">
-      <main className="mx-auto flex w-full max-w-2xl flex-col gap-6">
-        <Header
-          connected={connected}
-          address={address}
-          network={network}
-          isTestnet={isTestnet}
-          isInstalled={isInstalled}
-          isChecking={isChecking}
-          freighterInstallUrl={freighterInstallUrl}
-          onConnect={connect}
-          onDisconnect={disconnect}
-        />
-
-        {!walletReady ? (
-          <section className="rounded-2xl border border-dashed border-white/15 bg-white/5 p-6 text-left text-sm text-slate-300">
-            Connect your Freighter wallet on Stellar testnet to view your balance
-            and send XLM.
-          </section>
-        ) : (
-          <>
-            <BalanceCard
-              address={address!}
-              balance={balance}
-              isLoading={isBalanceLoading}
-              error={balanceError}
+    <div className="flex min-h-screen flex-col lg:grid lg:grid-cols-[1fr_minmax(320px,420px)]">
+      <div className="grid-paper order-2 px-5 py-8 sm:px-8 lg:order-1 lg:px-10 lg:py-10">
+        <main className="mx-auto flex w-full max-w-3xl flex-col gap-6">
+          {!walletReady ? (
+            <EmptyWorkspace
+              onConnect={connect}
+              isInstalled={isInstalled}
+              isChecking={isChecking}
+              freighterInstallUrl={freighterInstallUrl}
             />
+          ) : (
+            <>
+              <WalletOverview
+                address={address!}
+                balance={balance}
+                isLoading={isBalanceLoading}
+                error={balanceError}
+                network={network}
+                isTestnet={isTestnet}
+              />
 
-            <FundAccountButton
-              disabled={!walletReady || isBalanceLoading}
-              isFunding={isFunding}
-              onFund={() => void handleFund()}
-            />
+              <WalletFlowSteps
+                connected={walletReady}
+                needsFunding={needsFunding}
+                isBalanceLoading={isBalanceLoading}
+              />
 
-            {fundMessage && (
-              <p className="rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-left text-sm text-slate-200">
-                {fundMessage}
-              </p>
-            )}
+              <ActionTabs
+                needsFunding={needsFunding}
+                isBalanceLoading={isBalanceLoading}
+                sendPanel={
+                  <SendPaymentForm
+                    address={address}
+                    isTestnet={isTestnet}
+                    disabled={!walletReady || !canSend}
+                    onSuccess={() => void refreshBalance()}
+                    sign={sign}
+                  />
+                }
+                fundPanel={
+                  <FundTabPanel
+                    disabled={!walletReady || isBalanceLoading || !needsFunding}
+                    isFunding={isFunding}
+                    onFund={() => void handleFund()}
+                    message={fundMessage}
+                  />
+                }
+                lockedSendPanel={<LockedSendPanel />}
+              />
+            </>
+          )}
+        </main>
+      </div>
 
-            <SendPaymentForm
-              address={address}
-              isTestnet={isTestnet}
-              disabled={!walletReady}
-              onSuccess={() => void refreshBalance()}
-              sign={sign}
-            />
-          </>
-        )}
-      </main>
+      <WalletSidebar
+        connected={connected}
+        address={address}
+        network={network}
+        isTestnet={isTestnet}
+        isInstalled={isInstalled}
+        isChecking={isChecking}
+        freighterInstallUrl={freighterInstallUrl}
+        onConnect={connect}
+        onDisconnect={() => {
+          disconnect();
+          setFundMessage(null);
+        }}
+      />
     </div>
   );
 }

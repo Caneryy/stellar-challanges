@@ -106,62 +106,74 @@ export function SendPaymentForm({
   };
 
   return (
-    <section className="rounded-2xl border border-white/10 bg-white/5 p-5 text-left shadow-xl shadow-black/20">
-      <h2 className="text-lg font-semibold text-white">Send XLM</h2>
-      <p className="mt-1 text-sm text-slate-300">
-        Send Payment works for both existing accounts and new addresses. If the
-        destination does not exist yet, at least 1 XLM will create and fund it.
-      </p>
+    <div className="space-y-6">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+        <div>
+          <h2 className="font-display text-2xl font-extrabold text-[color:var(--color-ink)] sm:text-3xl">
+            Send payment
+          </h2>
+          <p className="mt-3 max-w-2xl text-sm leading-relaxed text-[color:var(--color-ink-muted)]">
+            Existing accounts receive a payment. New addresses are created
+            automatically when you send at least 1 XLM.
+          </p>
+        </div>
+        {lastOperation && status !== "idle" && status !== "error" && (
+          <span className="inline-flex w-fit rounded-full bg-[color:var(--color-accent-soft)] px-4 py-2 text-xs font-semibold uppercase tracking-[0.18em] text-[color:var(--color-accent)]">
+            {lastOperation === "payment" ? "Payment mode" : "Create account mode"}
+          </span>
+        )}
+      </div>
 
-      <form onSubmit={(event) => void handleSubmit(event)} className="mt-5 space-y-4">
+      <form onSubmit={(event) => void handleSubmit(event)} className="space-y-5">
         <label className="block">
-          <span className="mb-2 block text-sm text-slate-300">Destination address</span>
+          <span className="mb-2 block text-xs font-semibold uppercase tracking-[0.22em] text-[color:var(--color-ink-muted)]">
+            Destination
+          </span>
           <input
             type="text"
             value={destination}
             onChange={(event) => setDestination(event.target.value)}
-            placeholder="G..."
+            placeholder="GABC...WXYZ"
             disabled={disabled || isSubmitting}
-            className="w-full rounded-xl border border-white/10 bg-slate-950/60 px-4 py-3 text-sm text-white outline-none transition focus:border-cyan-400 disabled:cursor-not-allowed disabled:opacity-50"
+            className="w-full rounded-[1.25rem] border-2 border-[color:var(--color-paper-dark)] bg-[color:var(--color-paper)] px-4 py-4 font-mono text-sm text-[color:var(--color-ink)] outline-none transition-all duration-200 focus:border-[color:var(--color-accent)] focus:shadow-[0_0_0_4px_rgba(255,92,0,0.12)] disabled:cursor-not-allowed disabled:opacity-50"
           />
         </label>
 
         <label className="block">
-          <span className="mb-2 block text-sm text-slate-300">Amount (XLM)</span>
-          <input
-            type="text"
-            inputMode="decimal"
-            value={amount}
-            onChange={(event) => setAmount(event.target.value)}
-            placeholder="1"
-            disabled={disabled || isSubmitting}
-            className="w-full rounded-xl border border-white/10 bg-slate-950/60 px-4 py-3 text-sm text-white outline-none transition focus:border-cyan-400 disabled:cursor-not-allowed disabled:opacity-50"
-          />
+          <span className="mb-2 block text-xs font-semibold uppercase tracking-[0.22em] text-[color:var(--color-ink-muted)]">
+            Amount
+          </span>
+          <div className="flex overflow-hidden rounded-[1.25rem] border-2 border-[color:var(--color-paper-dark)] bg-[color:var(--color-paper)] transition-all duration-200 focus-within:border-[color:var(--color-accent)] focus-within:shadow-[0_0_0_4px_rgba(255,92,0,0.12)]">
+            <input
+              type="text"
+              inputMode="decimal"
+              value={amount}
+              onChange={(event) => setAmount(event.target.value)}
+              placeholder="1"
+              disabled={disabled || isSubmitting}
+              className="min-w-0 flex-1 bg-transparent px-4 py-4 text-lg font-semibold text-[color:var(--color-ink)] outline-none disabled:cursor-not-allowed disabled:opacity-50"
+            />
+            <span className="flex items-center border-l border-[color:var(--color-paper-dark)] px-4 text-sm font-semibold text-[color:var(--color-ink-muted)]">
+              XLM
+            </span>
+          </div>
         </label>
 
         <button
           type="submit"
           disabled={disabled || isSubmitting}
-          className="w-full rounded-xl bg-cyan-400 px-4 py-3 text-sm font-semibold text-slate-950 transition hover:bg-cyan-300 disabled:cursor-not-allowed disabled:opacity-50"
+          className="w-full rounded-[1.25rem] bg-[color:var(--color-ink)] px-4 py-4 text-base font-semibold text-white transition-all duration-200 hover:translate-y-[-1px] hover:bg-[#2a241f] hover:shadow-[0_10px_24px_rgba(20,17,15,0.18)] active:translate-y-0 disabled:cursor-not-allowed disabled:opacity-45"
         >
-          {isSubmitting ? "Processing..." : "Send Payment"}
+          {isSubmitting ? "Working on it..." : "Send Payment"}
         </button>
       </form>
 
-      {lastOperation && status !== "idle" && status !== "error" && message && (
-        <p className="mt-4 text-xs uppercase tracking-wide text-slate-400">
-          Operation: {lastOperation === "payment" ? "Payment" : "Create Account"}
-        </p>
-      )}
-
-      <div className="mt-4">
-        <TransactionFeedback
-          status={status}
-          message={message}
-          txHash={txHash}
-          explorerUrl={explorerUrl}
-        />
-      </div>
-    </section>
+      <TransactionFeedback
+        status={status}
+        message={message}
+        txHash={txHash}
+        explorerUrl={explorerUrl}
+      />
+    </div>
   );
 }

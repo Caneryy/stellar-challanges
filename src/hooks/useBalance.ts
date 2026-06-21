@@ -6,14 +6,16 @@ export function useBalance(address: string | null) {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const refreshBalance = useCallback(async () => {
+  const refreshBalance = useCallback(async (options?: { silent?: boolean }) => {
     if (!address) {
       setBalance("0");
       setError(null);
       return;
     }
 
-    setIsLoading(true);
+    if (!options?.silent) {
+      setIsLoading(true);
+    }
     setError(null);
 
     try {

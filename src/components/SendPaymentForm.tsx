@@ -7,6 +7,7 @@ import {
   validatePaymentInput,
 } from "../lib/transactions";
 import { getExplorerTxUrl } from "../lib/stellar";
+import { SendSuccessResult } from "./SendSuccessResult";
 import { TransactionFeedback, type TransactionStatus } from "./TransactionFeedback";
 
 interface SendPaymentFormProps {
@@ -15,6 +16,11 @@ interface SendPaymentFormProps {
   disabled: boolean;
   onSuccess: () => void;
   sign: (xdr: string) => Promise<string>;
+}
+
+interface SentPaymentDetails {
+  amount: string;
+  destination: string;
 }
 
 export function SendPaymentForm({
@@ -30,7 +36,16 @@ export function SendPaymentForm({
   const [message, setMessage] = useState<string | null>(null);
   const [txHash, setTxHash] = useState<string | null>(null);
   const [explorerUrl, setExplorerUrl] = useState<string | null>(null);
+  const [sentPayment, setSentPayment] = useState<SentPaymentDetails | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const resetSuccess = () => {
+    setStatus("idle");
+    setMessage(null);
+    setTxHash(null);
+    setExplorerUrl(null);
+    setSentPayment(null);
+  };
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -56,15 +71,15 @@ export function SendPaymentForm({
     setMessage(null);
     setTxHash(null);
     setExplorerUrl(null);
+    setSentPayment(null);
+
+    const trimmedDestination = destination.trim();
+    const trimmedAmount = amount.trim();
 
     try {
       setStatus("building");
       setMessage("Preparing...");
-      const prepared = await prepareSendPayment(
-        address,
-        destination.trim(),
-        amount.trim(),
-      );
+      const prepared = await prepareSendPayment(address, trimmedDestination, trimmedAmount);
 
       setStatus("signing");
       setMessage("Confirm in Freighter...");
@@ -78,6 +93,7 @@ export function SendPaymentForm({
       setMessage(getSuccessMessage(prepared.operation));
       setTxHash(result.hash);
       setExplorerUrl(getExplorerTxUrl(result.hash));
+      setSentPayment({ amount: trimmedAmount, destination: trimmedDestination });
       setDestination("");
       setAmount("");
       onSuccess();
@@ -88,6 +104,26 @@ export function SendPaymentForm({
       setIsSubmitting(false);
     }
   };
+
+  const showSuccess =
+    status === "success" &&
+    sentPayment &&
+    txHash &&
+    explorerUrl &&
+    message;
+
+  if (showSuccess) {
+    return (
+      <SendSuccessResult
+        message={message}
+        amount={sentPayment.amount}
+        destination={sentPayment.destination}
+        txHash={txHash}
+        explorerUrl={explorerUrl}
+        onSendAnother={resetSuccess}
+      />
+    );
+  }
 
   return (
     <div className="space-y-3">
@@ -135,12 +171,7 @@ export function SendPaymentForm({
         </button>
       </form>
 
-      <TransactionFeedback
-        status={status}
-        message={message}
-        txHash={txHash}
-        explorerUrl={explorerUrl}
-      />
+      <TransactionFeedback status={status} message={message} />
     </div>
   );
 }

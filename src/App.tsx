@@ -31,7 +31,7 @@ function App() {
 
   const walletReady = connected && Boolean(address);
   const needsFunding = needsFriendbotFunding(balance);
-  const canSend = canSendPayments(balance) && !isBalanceLoading;
+  const canSend = canSendPayments(balance);
   const sendLocked = needsFunding;
 
   useEffect(() => {
@@ -93,7 +93,7 @@ function App() {
         address={address}
         isTestnet={isTestnet}
         canSend={canSend}
-        onSuccess={() => void refreshBalance()}
+        onSuccess={() => void refreshBalance({ silent: true })}
         onGoToFund={() => setActiveSection("fund")}
         sign={sign}
       />

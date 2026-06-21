@@ -12,8 +12,9 @@ import { TransactionFeedback, type TransactionStatus } from "./TransactionFeedba
 
 interface SendPaymentFormProps {
   address: string | null;
+  connected: boolean;
   isTestnet: boolean;
-  disabled: boolean;
+  onConnect: () => void;
   onSuccess: () => void;
   sign: (xdr: string) => Promise<string>;
 }
@@ -25,8 +26,9 @@ interface SentPaymentDetails {
 
 export function SendPaymentForm({
   address,
+  connected,
   isTestnet,
-  disabled,
+  onConnect,
   onSuccess,
   sign,
 }: SendPaymentFormProps) {
@@ -49,6 +51,12 @@ export function SendPaymentForm({
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+
+    if (!connected) {
+      onConnect();
+      return;
+    }
+
     if (!address) {
       return;
     }
@@ -137,7 +145,7 @@ export function SendPaymentForm({
             value={destination}
             onChange={(event) => setDestination(event.target.value)}
             placeholder="GABC...WXYZ"
-            disabled={disabled || isSubmitting}
+            disabled={isSubmitting}
             className="w-full rounded-xl border-2 border-[color:var(--color-paper-dark)] bg-[color:var(--color-paper)] px-3 py-2.5 font-mono text-sm outline-none focus:border-[color:var(--color-accent)] disabled:opacity-50"
           />
         </label>
@@ -153,7 +161,7 @@ export function SendPaymentForm({
               value={amount}
               onChange={(event) => setAmount(event.target.value)}
               placeholder="1"
-              disabled={disabled || isSubmitting}
+              disabled={isSubmitting}
               className="min-w-0 flex-1 bg-transparent px-3 py-2.5 text-sm font-semibold outline-none disabled:opacity-50"
             />
             <span className="flex items-center border-l border-[color:var(--color-paper-dark)] px-3 text-xs text-[color:var(--color-ink-muted)]">
@@ -164,10 +172,14 @@ export function SendPaymentForm({
 
         <button
           type="submit"
-          disabled={disabled || isSubmitting}
+          disabled={connected && isSubmitting}
           className="w-full rounded-xl bg-[color:var(--color-ink)] py-3 text-sm font-semibold text-white disabled:opacity-45"
         >
-          {isSubmitting ? "Sending..." : "Send Payment"}
+          {!connected
+            ? "Connect wallet"
+            : isSubmitting
+              ? "Sending..."
+              : "Send Payment"}
         </button>
       </form>
 

@@ -3,18 +3,32 @@ import { splitXlmBalance, truncateMiddle } from "../lib/format";
 import { needsFriendbotFunding } from "../lib/walletFlow";
 
 interface WalletBarProps {
-  address: string;
+  connected: boolean;
+  address: string | null;
   balance: string;
   isLoading: boolean;
   error: string | null;
+  onConnect: () => void;
 }
 
-export function WalletBar({ address, balance, isLoading, error }: WalletBarProps) {
+export function WalletBar({
+  connected,
+  address,
+  balance,
+  isLoading,
+  error,
+  onConnect,
+}: WalletBarProps) {
   const { integerPart, decimalPart } = splitXlmBalance(balance);
   const unfunded = needsFriendbotFunding(balance);
   const [copied, setCopied] = useState(false);
 
   const handleCopy = async () => {
+    if (!connected || !address) {
+      onConnect();
+      return;
+    }
+
     try {
       await navigator.clipboard.writeText(address);
       setCopied(true);
@@ -32,9 +46,13 @@ export function WalletBar({ address, balance, isLoading, error }: WalletBarProps
             Address
           </p>
           <div className="mt-1 flex min-w-0 items-center gap-2 rounded-lg bg-black/30 px-3 py-2">
-            <p className="min-w-0 flex-1 truncate font-mono text-xs text-white/85" title={address}>
-              {truncateMiddle(address, 10, 10)}
-            </p>
+            {connected && address ? (
+              <p className="min-w-0 flex-1 truncate font-mono text-xs text-white/85" title={address}>
+                {truncateMiddle(address, 10, 10)}
+              </p>
+            ) : (
+              <p className="min-w-0 flex-1 font-mono text-xs text-white/40">—</p>
+            )}
             <button
               type="button"
               onClick={() => void handleCopy()}
@@ -49,7 +67,14 @@ export function WalletBar({ address, balance, isLoading, error }: WalletBarProps
           <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-white/40">
             Balance
           </p>
-          {isLoading ? (
+          {!connected ? (
+            <div className="mt-0.5 flex flex-wrap items-baseline gap-x-2 sm:justify-end">
+              <span className="font-display text-3xl font-extrabold leading-none text-white/40 sm:text-4xl">
+                —
+              </span>
+              <span className="text-sm font-semibold text-white/40">XLM</span>
+            </div>
+          ) : isLoading ? (
             <div className="mt-1 h-8 w-32 rounded-lg animate-shimmer sm:ml-auto" />
           ) : error ? (
             <p className="mt-1 text-sm text-red-200">{error}</p>

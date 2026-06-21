@@ -71,17 +71,15 @@ function App() {
   };
 
   const renderSection = () => {
-    if (!address) {
-      return null;
-    }
-
     if (activeSection === "fund") {
       return (
         <FundView
+          connected={walletReady}
           needsFunding={needsFunding}
           isBalanceLoading={isBalanceLoading}
           isFunding={isFunding}
           message={fundMessage}
+          onConnect={() => void connect()}
           onFund={() => void handleFund()}
           onGoToSend={() => setActiveSection("send")}
         />
@@ -90,9 +88,11 @@ function App() {
 
     return (
       <SendView
+        connected={walletReady}
         address={address}
         isTestnet={isTestnet}
         canSend={canSend}
+        onConnect={() => void connect()}
         onSuccess={() => void refreshBalance({ silent: true })}
         onGoToFund={() => setActiveSection("fund")}
         sign={sign}

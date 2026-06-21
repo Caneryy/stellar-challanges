@@ -1,19 +1,23 @@
 import { FundTabPanel } from "../components/FundTabPanel";
 
 interface FundViewProps {
+  connected: boolean;
   needsFunding: boolean;
   isBalanceLoading: boolean;
   isFunding: boolean;
   message: string | null;
+  onConnect: () => void;
   onFund: () => void;
   onGoToSend: () => void;
 }
 
 export function FundView({
+  connected,
   needsFunding,
   isBalanceLoading,
   isFunding,
   message,
+  onConnect,
   onFund,
   onGoToSend,
 }: FundViewProps) {
@@ -26,13 +30,15 @@ export function FundView({
         Get starter testnet XLM from Friendbot.
       </p>
 
-      {isBalanceLoading ? (
+      {connected && isBalanceLoading ? (
         <div className="mt-4 h-20 rounded-xl animate-shimmer" />
-      ) : needsFunding ? (
+      ) : !connected || needsFunding ? (
         <div className="mt-4">
           <FundTabPanel
+            connected={connected}
             disabled={!needsFunding}
             isFunding={isFunding}
+            onConnect={onConnect}
             onFund={onFund}
             message={message}
           />

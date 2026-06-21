@@ -1,16 +1,35 @@
 interface FundTabPanelProps {
+  connected: boolean;
   disabled: boolean;
   isFunding: boolean;
+  onConnect: () => void;
   onFund: () => void;
   message: string | null;
 }
 
 export function FundTabPanel({
+  connected,
   disabled,
   isFunding,
+  onConnect,
   onFund,
   message,
 }: FundTabPanelProps) {
+  const handleClick = () => {
+    if (!connected) {
+      onConnect();
+      return;
+    }
+
+    onFund();
+  };
+
+  const buttonLabel = !connected
+    ? "Connect wallet"
+    : isFunding
+      ? "Funding..."
+      : "Fund with Friendbot";
+
   return (
     <div className="space-y-3">
       <p className="text-sm leading-relaxed text-[color:var(--color-ink-muted)]">
@@ -20,11 +39,11 @@ export function FundTabPanel({
 
       <button
         type="button"
-        onClick={onFund}
-        disabled={disabled || isFunding}
+        onClick={handleClick}
+        disabled={connected && (disabled || isFunding)}
         className="w-full rounded-xl bg-[color:var(--color-accent)] py-3 text-sm font-semibold text-[color:var(--color-ink)] disabled:cursor-not-allowed disabled:opacity-45"
       >
-        {isFunding ? "Funding..." : "Fund with Friendbot"}
+        {buttonLabel}
       </button>
 
       {message && (

@@ -1,18 +1,22 @@
 import { SendPaymentForm } from "../components/SendPaymentForm";
 
 interface SendViewProps {
-  address: string;
+  connected: boolean;
+  address: string | null;
   isTestnet: boolean;
   canSend: boolean;
+  onConnect: () => void;
   onSuccess: () => void;
   onGoToFund: () => void;
   sign: (xdr: string) => Promise<string>;
 }
 
 export function SendView({
+  connected,
   address,
   isTestnet,
   canSend,
+  onConnect,
   onSuccess,
   onGoToFund,
   sign,
@@ -26,7 +30,7 @@ export function SendView({
         Transfer native XLM on Stellar testnet.
       </p>
 
-      {!canSend ? (
+      {connected && !canSend ? (
         <div className="mt-4 space-y-4 rounded-xl border-2 border-dashed border-[color:var(--color-paper-dark)] bg-[color:var(--color-paper)] p-4">
           <p className="text-sm font-semibold text-[color:var(--color-ink)]">
             Fund your wallet first
@@ -46,8 +50,9 @@ export function SendView({
         <div className="mt-4">
           <SendPaymentForm
             address={address}
+            connected={connected}
             isTestnet={isTestnet}
-            disabled={false}
+            onConnect={onConnect}
             onSuccess={onSuccess}
             sign={sign}
           />

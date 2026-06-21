@@ -55,37 +55,28 @@ export function AppShell({
         onDisconnect={onDisconnect}
       />
 
-      {!connected || !address ? (
-        <section className="mt-4 rounded-2xl border-2 border-dashed border-[color:var(--color-ink)]/20 bg-white p-6 text-center">
-          <p className="font-display text-xl font-extrabold text-[color:var(--color-ink)]">
-            Connect Freighter to start
-          </p>
-          <p className="mt-2 text-sm text-[color:var(--color-ink-muted)]">
-            Your address and balance will stay visible here. Use Fund and Send below.
-          </p>
-        </section>
-      ) : (
-        <div className="mt-4 space-y-4">
-          <WalletBar
-            address={address}
-            balance={balance}
-            isLoading={balanceLoading}
-            error={balanceError}
+      <div className="mt-4 space-y-4">
+        <WalletBar
+          connected={connected}
+          address={address}
+          balance={balance}
+          isLoading={balanceLoading}
+          error={balanceError}
+          onConnect={() => void onConnect()}
+        />
+
+        <div className="grid gap-4 lg:grid-cols-[200px_minmax(0,1fr)] lg:gap-5">
+          <AppNav
+            activeSection={activeSection}
+            onSectionChange={onSectionChange}
+            sendLocked={sendLocked}
           />
 
-          <div className="grid gap-4 lg:grid-cols-[200px_minmax(0,1fr)] lg:gap-5">
-            <AppNav
-              activeSection={activeSection}
-              onSectionChange={onSectionChange}
-              sendLocked={sendLocked}
-            />
-
-            <main className="min-w-0 rounded-2xl border-2 border-[color:var(--color-ink)] bg-white shadow-[6px_6px_0_0_#14110f]">
-              {children}
-            </main>
-          </div>
+          <main className="min-w-0 rounded-2xl border-2 border-[color:var(--color-ink)] bg-white shadow-[6px_6px_0_0_#14110f]">
+            {children}
+          </main>
         </div>
-      )}
+      </div>
     </div>
   );
 }

@@ -3,6 +3,7 @@ import {
   buildPaymentTx,
   getTransactionErrorMessage,
   submitPayment,
+  validateDestinationAccount,
   validatePaymentInput,
 } from "../lib/transactions";
 import { getExplorerTxUrl } from "../lib/stellar";
@@ -64,6 +65,17 @@ export function SendPaymentForm({
 
     try {
       setStatus("building");
+      setMessage("Checking destination account...");
+      const destinationError = await validateDestinationAccount(
+        destination.trim(),
+        amount.trim(),
+      );
+      if (destinationError) {
+        setStatus("error");
+        setMessage(destinationError);
+        return;
+      }
+
       setMessage("Building transaction...");
       const xdr = await buildPaymentTx(address, destination.trim(), amount.trim());
 
@@ -96,7 +108,8 @@ export function SendPaymentForm({
     <section className="rounded-2xl border border-white/10 bg-white/5 p-5 text-left shadow-xl shadow-black/20">
       <h2 className="text-lg font-semibold text-white">Send XLM</h2>
       <p className="mt-1 text-sm text-slate-300">
-        Send a native XLM payment on Stellar testnet.
+        Send a native XLM payment on Stellar testnet. New accounts are created
+        automatically when you send at least 1 XLM.
       </p>
 
       <form onSubmit={(event) => void handleSubmit(event)} className="mt-5 space-y-4">
